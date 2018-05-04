@@ -15,8 +15,8 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.os.Parcelable;
+import android.text.method.ScrollingMovementMethod;
 import android.util.Log;
-import android.widget.EditText;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -32,15 +32,12 @@ public class MainActivity extends Activity {
 
     private static final String LOG_TAG = "eH-Hospital";
 
-    TextView textInfo;
-    EditText textOut;
-
+    private TextView textInfo;
+    private TextView textOut;
 
     private NfcAdapter nfcAdapter;
 
     private String eHealtWalletMacAdress;
-
-
 
     // Unique UUID for this application
     private static final UUID MY_UUID_SECURE =
@@ -59,6 +56,9 @@ public class MainActivity extends Activity {
     public static final int MESSAGE_WRITE = 3;
     public static final int MESSAGE_DEVICE_NAME = 4;
     public static final int MESSAGE_TOAST = 5;
+    public static final int MESSAGE_TRANSFER_INFO = 6;
+
+    public static final String INFO = "info";
 
     private final BluetoothAdapter mAdapter = BluetoothAdapter.getDefaultAdapter();
 
@@ -72,8 +72,11 @@ public class MainActivity extends Activity {
     protected void onCreate(Bundle savedInstanceState) {
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+
         textInfo = (TextView) findViewById(R.id.info);
-        textOut = (EditText) findViewById(R.id.textout);
+
+        textOut = (TextView) findViewById(R.id.textout);
+        textOut.setMovementMethod(new ScrollingMovementMethod());
 
         nfcAdapter = NfcAdapter.getDefaultAdapter(this);
         if (nfcAdapter == null) {
@@ -85,9 +88,12 @@ public class MainActivity extends Activity {
                     "Please enable NFC",
                     Toast.LENGTH_LONG).show();
         } else {
-            Toast.makeText(MainActivity.this,
-                    "Waiting for Wallet ...",
-                    Toast.LENGTH_LONG).show();
+            // Toast.makeText(MainActivity.this,
+            //        "Waiting for Wallet ...",
+            //        Toast.LENGTH_LONG).show();
+
+            textInfo.append("NFC enabled ... \nWaiting for Wallet ...");
+
             //nfcAdapter.setNdefPushMessageCallback(this, this);
             //nfcAdapter.setOnNdefPushCompleteCallback(this, this);
         }
@@ -121,7 +127,11 @@ public class MainActivity extends Activity {
 
             eHealtWalletMacAdress = inMsg;
 
-            textOut.setText("Wallet detected (" +inMsg + ")");
+            // textOut.setText("Wallet detected (" +inMsg + ")");
+            // Toast.makeText(this, "Wallet detected (" +inMsg + ")", Toast.LENGTH_SHORT).show();
+
+            textInfo.append("\nWallet detected (" +inMsg + ")");
+
             Log.i(LOG_TAG, inMsg);
 
 
@@ -159,6 +169,15 @@ public class MainActivity extends Activity {
         // Start the thread to connect with the given device
         mConnectThread = new ConnectThread(device, secure);
         mConnectThread.start();
+
+        Message msg = mHandler.obtainMessage(MESSAGE_TRANSFER_INFO);
+        Bundle bundle = new Bundle();
+        bundle.putString(INFO, "Connect via Bluetooth ...");
+        msg.setData(bundle);
+        mHandler.sendMessage(msg);
+
+        //connected
+
         // Update UI title
 //        updateUserInterfaceTitle();
     }
@@ -188,18 +207,14 @@ public class MainActivity extends Activity {
 
         // Start the thread to manage the connection and perform transmissions
         mConnectedThread = new ConnectedThread(socket, socketType);
-        mConnectedThread.start();
 
-        // Send the name of the connected device back to the UI Activity
-        /*
-        Message msg = mHandler.obtainMessage(Constants.MESSAGE_DEVICE_NAME);
+        Message msg = mHandler.obtainMessage(MESSAGE_TRANSFER_INFO);
         Bundle bundle = new Bundle();
-        bundle.putString(Constants.DEVICE_NAME, device.getName());
+        bundle.putString(INFO, "Start transfer via Bluetooth ...");
         msg.setData(bundle);
         mHandler.sendMessage(msg);
-        */
-        // Update UI title
-        //updateUserInterfaceTitle();
+
+        mConnectedThread.start();
     }
 
 
@@ -217,7 +232,6 @@ public class MainActivity extends Activity {
 
         @Override
         public void handleMessage(Message msg) {
-
 
             Log.d(LOG_TAG, "handleMessage:" + msg.what);
 
@@ -249,12 +263,13 @@ public class MainActivity extends Activity {
 //                    String readMessage = new String(readBuf, 0, msg.arg1);
 //                    mConversationArrayAdapter.add(mConnectedDeviceName + ":  " + readMessage);
 //                    break;
-//                case Constants.MESSAGE_DEVICE_NAME:
-//                    // save the connected device's name
-//                    mConnectedDeviceName = msg.getData().getString(Constants.DEVICE_NAME);
+                case MESSAGE_TRANSFER_INFO:
+                    textInfo.append("\n" + msg.getData().getString(INFO));
+
 //                    if (null != activity) {
 //                        Toast.makeText(activity, "Connected to "
 //                                + mConnectedDeviceName, Toast.LENGTH_SHORT).show();
+
 //                    }
 //                    break;
 //                case MESSAGE_TOAST:
@@ -262,7 +277,7 @@ public class MainActivity extends Activity {
 //                        Toast.makeText(activity, msg.getData().getString(Constants.TOAST),
 //                                Toast.LENGTH_SHORT).show();
 //                    }
-//                    break;
+                    break;
 
                     case MESSAGE_TOAST:
 
@@ -278,7 +293,7 @@ public class MainActivity extends Activity {
 
                         Log.d(LOG_TAG, "message:" + readMessage);
 
-                        textInfo.setText(readMessage);
+                        textOut.append(readMessage);
 
                         //Toast.makeText(a, readMessage, Toast.LENGTH_SHORT).show();
                         //setStatus(R.string.title_not_connected);
@@ -392,18 +407,18 @@ public class MainActivity extends Activity {
 
         public void run() {
             Log.i(LOG_TAG, "BEGIN mConnectedThread");
-            byte[] buffer = new byte[1024];
+            byte[] buffer = new byte[8024];
             int bytes = 0;
 
             // Keep listening to the InputStream while connected
             Log.i(LOG_TAG, "State:" + mState);
-            int i = 0;
+            int i = 1;
             while (mState == STATE_CONNECTED) {
                try {
-                   if (i < 1000) {
-                       Log.i(LOG_TAG, "Loop:" + i + " : " + bytes);
-                       i++;
-                   }
+//                   if (i < 1000) {
+//                       Log.i(LOG_TAG, "Loop:" + i + " : " + bytes);
+//                       i++;
+//                   }
                     // Read from the InputStream
                     //bytes = mmInStream.read(buffer);
 
@@ -441,6 +456,14 @@ public class MainActivity extends Activity {
 //                            fhirRecord,
 //                            Toast.LENGTH_LONG).show();
 
+
+                   Message msg = mHandler.obtainMessage(MESSAGE_TRANSFER_INFO);
+                   Bundle bundle = new Bundle();
+                   bundle.putString(INFO, "FHIR health record transfer, part " + i);
+                   i++;
+                   msg.setData(bundle);
+                   mHandler.sendMessage(msg);
+
                 } catch (Exception e) {
                     Log.e(LOG_TAG, "disconnected", e);
 //                    connectionLost();
@@ -468,6 +491,7 @@ public class MainActivity extends Activity {
 
         public void cancel() {
             try {
+                Log.e(LOG_TAG, "close() of connect socket");
                 mmSocket.close();
             } catch (IOException e) {
                 Log.e(LOG_TAG, "close() of connect socket failed", e);
