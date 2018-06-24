@@ -94,23 +94,10 @@ public class MainActivity extends AppCompatActivity {
     @Override
     protected void onCreate(Bundle savedInstanceState) {
 
-
         Intent i = getIntent();
-
- //       textOut = (TextView) findViewById(R.id.textout);
- //       textOut.setMovementMethod(new ScrollingMovementMethod());
-
-        //mSectionsPageAdapter = new SectionsPageAdapter(getSupportFragmentManager());
-    //    mViewPager = (ViewPager) findViewById(R.id.container);
-    //    setupViewPager(mViewPager);
-
-     //   TabLayout tabLayout = (TabLayout) findViewById(R.id.tabs);
-     //   tabLayout.setupWithViewPager(mViewPager);
 
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
- //       Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
- //       setSupportActionBar(toolbar);
 
         tabLayout = (TabLayout) findViewById(R.id.tab_layout);
         tabLayout.addTab(tabLayout.newTab().setText("Log"));
@@ -147,24 +134,6 @@ public class MainActivity extends AppCompatActivity {
             @Override
             public void onClick(View view)
             {
-             /**
-
-                ImageView pic = (ImageView) view.findViewById(R.id.pic);
-                if (pic != null) {
-                    pic.setVisibility(ImageView.INVISIBLE);
-                }
-
-         //       TextView textInfo = (TextView) view.findViewById(R.id.info);
-          //      if (textInfo != null) {
-          //          textInfo.setVisibility(TextView.INVISIBLE);
-          //      }
-
-                TextView textout = (TextView) view.findViewById(R.id.textout);
-                if (textout != null) {
-                    textout.setVisibility(TextView.INVISIBLE);
-                }
-*/
-
                 Tab1Fragment frag1 = (Tab1Fragment)adapter.getItem(0);
                 frag1.hideText();
 
@@ -173,15 +142,8 @@ public class MainActivity extends AppCompatActivity {
 
                 Tab3Fragment frag3 = (Tab3Fragment)adapter.getItem(2);
                 frag3.hidePictureDummy();
-
-                /*
-                Toast.makeText(MainActivity.this,
-                        "Remove sachen",
-                        Toast.LENGTH_LONG).show(); */
             }
         });
-
-
 
         nfcAdapter = NfcAdapter.getDefaultAdapter(this);
         if (nfcAdapter == null) {
@@ -226,29 +188,15 @@ public class MainActivity extends AppCompatActivity {
 
     @Override
     public boolean onCreateOptionsMenu(Menu menu) {
-        //getMenuInflater().inflate(R.menu.menu_main, menu);
         return true;
     }
 
     @Override
     public boolean onOptionsItemSelected(MenuItem item) {
         int id = item.getItemId();
-  //      if (id == R.id.action_settings) {
-  //          return true;
-  //      }
 
         return super.onOptionsItemSelected(item);
     }
-
-
-//    private void setupViewPager(ViewPager viewPager) {
-//        mSectionsPageAdapter = new SectionsPageAdapter(getSupportFragmentManager());
-//        mSectionsPageAdapter.addFragment(new Tab1Fragment(), "Communication");
-//        mSectionsPageAdapter.addFragment(new Tab2Fragment(), "FHIR record");
-//        mSectionsPageAdapter.addFragment(new Tab3Fragment(), "Image");
-//        viewPager.setAdapter(mSectionsPageAdapter);
-//    }
-
 
     @Override
     protected void onResume() {
@@ -322,18 +270,7 @@ public class MainActivity extends AppCompatActivity {
         mConnectThread = new ConnectThread(device, secure);
         mConnectThread.start();
 
- //       Message msg = mHandler.obtainMessage(MESSAGE_TRANSFER_INFO);
- //       Bundle bundle = new Bundle();
- //       bundle.putString(INFO, "Connect via Bluetooth ...");
-//        msg.setData(bundle);
- //       mHandler.sendMessage(msg);
-
         transferInfo("Connect via Bluetooth ...");
-
-        //connected
-
-        // Update UI title
-//        updateUserInterfaceTitle();
     }
 
 
@@ -362,12 +299,6 @@ public class MainActivity extends AppCompatActivity {
         // Start the thread to manage the connection and perform transmissions
         mConnectedThread = new ConnectedThread(socket, socketType);
 
-     //   Message msg = mHandler.obtainMessage(MESSAGE_TRANSFER_INFO);
-     //   Bundle bundle = new Bundle();
-     //   bundle.putString(INFO, "Start transfer via Bluetooth ...");
-     //   msg.setData(bundle);
-     //   mHandler.sendMessage(msg);
-
         transferInfo("Start transfer via Bluetooth ...");
 
         mConnectedThread.start();
@@ -386,79 +317,47 @@ public class MainActivity extends AppCompatActivity {
 
         Activity a = getParent();
 
-        /*
-        final ViewPager viewPager = (ViewPager) findViewById(R.id.pager);
-        PagerAdapter adapter = (PagerAdapter)viewPager.getAdapter();
-        Tab1Fragment frag1 = (Tab1Fragment)adapter.getItem(0);
-        Tab2Fragment frag2 = (Tab2Fragment) adapter.getItem(1);
-        Tab3Fragment frag3 = (Tab3Fragment) adapter.getItem(2);
-*/
-
         @Override
         public void handleMessage(Message msg) {
 
             Log.d(LOG_TAG, "handleMessage:" + msg.what);
 
-            //final ViewPager viewPager = (ViewPager) findViewById(R.id.pager);
-            //PagerAdapter adapter = (PagerAdapter)viewPager.getAdapter();
-
-  //          final ViewPager viewPager = (ViewPager) findViewById(R.id.pager);
-  //          PagerAdapter adapter = (PagerAdapter)viewPager.getAdapter();
             Tab1Fragment frag1 = (Tab1Fragment) adapter.getItem(0);
             Tab2Fragment frag2 = (Tab2Fragment) adapter.getItem(1);
             Tab3Fragment frag3 = (Tab3Fragment) adapter.getItem(2);
-
 
             switch (msg.what) {
 
                 case MESSAGE_TRANSFER_INFO:
 
-                    //Tab1Fragment frag1 = (Tab1Fragment)adapter.getItem(0);
                     frag1.appendToTextInfo(msg.getData().getString(INFO));
                     break;
 
                 case MESSAGE_TOAST:
 
-                        Toast.makeText(a, msg.getData().getString("TOAST"),
-                                Toast.LENGTH_SHORT).show();
+                    Toast.makeText(a, msg.getData().getString("TOAST"),
+                            Toast.LENGTH_SHORT).show();
                     break;
 
                 case MESSAGE_READ:
-                        byte[] readBuf = (byte[]) msg.obj;
-                        // construct a string from the valid bytes in the buffer
-                        String readMessage = new String(readBuf, 0, msg.arg1);
-                        //mConversationArrayAdapter.add(mConnectedDeviceName + ":  " + readMessage);
+                    byte[] readBuf = (byte[]) msg.obj;
+                    // construct a string from the valid bytes in the buffer
+                    String readMessage = new String(readBuf, 0, msg.arg1);
 
-                        Log.d(LOG_TAG, "message:" + readMessage);
+                    Log.d(LOG_TAG, "message:" + readMessage);
 
-                        // textOut.append(readMessage);
-                        // Log.d(LOG_TAG, "\n" +readMessage);
+                    if (readMessage.startsWith(STREAM_STOP)) {
+                        Log.d(LOG_TAG, STREAM_STOP + ":\n" + readMessage);
+                        frag1.appendToTextInfo("Transfer finished ...");
+                        frag3.showPictureDummy();
+                    } else if (isPuretext(readMessage)) {
+                        frag2.appendToTextInfo(readMessage);
+                    } else {
+                        Log.i(LOG_TAG, "PICTURE Data!!!");
+                        //frag3.appendPictureData(readBuf);
+                    }
 
-                        if (readMessage.startsWith(STREAM_STOP)) {
-                            Log.d(LOG_TAG, STREAM_STOP + ":\n" + readMessage);
-                            //Tab1Fragment frag1 = (Tab1Fragment)adapter.getItem(0);
-                            //frag1.onCreateView(getLayoutInflater(), viewPager, null);
-                            frag1.appendToTextInfo("Transfer finished ...");
-                            //Tab3Fragment frag3 = (Tab3Fragment) adapter.getItem(2);
-                            frag3.onCreateView(getLayoutInflater(), viewPager, null);
-                            //frag3.showPicture(readBuf);
-                            frag3.showPictureDummy();
-                        } else if (isPuretext(readMessage)) {
-                            //Log.d(LOG_TAG, "message:" + readMessage);
-                            //Tab2Fragment frag2 = (Tab2Fragment) adapter.getItem(1);
-                            frag2.appendToTextInfo(readMessage);
-                        } else {
-                            //Tab3Fragment frag3 = (Tab3Fragment) adapter.getItem(2);
-                            Log.i(LOG_TAG, "PICTURE Data!!!");
-                            //frag3.appendPictureData(readBuf);
-                        }
-
-
-
-                        //Toast.makeText(a, readMessage, Toast.LENGTH_SHORT).show();
-                        //setStatus(R.string.title_not_connected);
                     break;
-
             }
         }
     };
@@ -624,7 +523,7 @@ public class MainActivity extends AppCompatActivity {
 
 
 
-                   //Imageread
+                   //Image read
 
 
 

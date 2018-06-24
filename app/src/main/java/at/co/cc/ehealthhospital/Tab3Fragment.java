@@ -16,6 +16,8 @@ import android.view.LayoutInflater;
 import android.view.View;
 import android.view.ViewGroup;
 import android.widget.ImageView;
+import android.widget.LinearLayout;
+import android.widget.RelativeLayout;
 
 import java.util.ArrayList;
 import java.util.Arrays;
@@ -27,7 +29,7 @@ public class Tab3Fragment extends Fragment {
 
     private static ImageView pic;
 
-    Drawable d;
+    private static boolean picSet = false;
 
     private static byte[] fullBytes = new byte[0];
 
@@ -36,19 +38,30 @@ public class Tab3Fragment extends Fragment {
     public View onCreateView(LayoutInflater inflater, @Nullable ViewGroup container, @Nullable Bundle savedInstanceState) {
 
         View view = inflater.inflate(R.layout.tab3_fragment, container, false);
+        pic = (ImageView) view.findViewById(R.id.pic);
+        if (!picSet) {
+            pic.setLayoutParams(new RelativeLayout.LayoutParams(0,0));
+        }
 
-            pic = (ImageView) view.findViewById(R.id.pic);
-
-            d =  pic.getDrawable();
-
-            pic.setImageDrawable(null);
-
-            pic.setVisibility(ImageView.VISIBLE);
-            Log.d(TAG, "pic initalized: " + pic);
-            Log.d(TAG, "ID: " + this);
-
+        Log.d(TAG, "pic initalized: " + pic);
+        Log.d(TAG, "ID: " + this);
 
         return view;
+    }
+
+    public void showPictureDummy() {
+        picSet = true;
+        pic.setLayoutParams(
+                new RelativeLayout.LayoutParams(
+                        ViewGroup.LayoutParams.WRAP_CONTENT,
+                        ViewGroup.LayoutParams.WRAP_CONTENT));
+
+        pic.setVisibility(ImageView.VISIBLE);
+    }
+
+    public void hidePictureDummy() {
+        pic.setLayoutParams(new RelativeLayout.LayoutParams(0,0));
+        picSet = false;
     }
 
     public void appendPictureData(byte[] newBytes) {
@@ -66,20 +79,6 @@ public class Tab3Fragment extends Fragment {
         fullBytes = combined;
         Log.d(TAG, "\nNew Bytes size: " + newBytes.length);
         Log.d(TAG, "\nFull Bytes size: " + fullBytes.length);
-    }
-
-    public void showPictureDummy() {
-        //pic = (ImageView) viewPager.getContext().fin  RootView().findViewById(R.id.pic);
-
-        Log.d(TAG, "ID: " + this);
-
-        pic.setImageDrawable(d);
-        pic.setVisibility(ImageView.VISIBLE);
-    }
-
-    public void hidePictureDummy() {
-        //pic.setImageDrawable(null);
-       // pic.setVisibility(ImageView.INVISIBLE);
     }
 
     public void showPicture (byte[] lastBytes) {
