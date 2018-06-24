@@ -1,6 +1,7 @@
 package at.co.cc.ehealthhospital;
 
 import android.app.Activity;
+import android.app.Fragment;
 import android.bluetooth.BluetoothAdapter;
 import android.bluetooth.BluetoothDevice;
 import android.bluetooth.BluetoothSocket;
@@ -15,8 +16,18 @@ import android.os.Bundle;
 import android.os.Handler;
 import android.os.Message;
 import android.os.Parcelable;
+import android.support.design.widget.TabLayout;
+import android.support.v4.app.FragmentManager;
+import android.support.v4.view.ViewPager;
+import android.support.v7.app.AppCompatActivity;
+import android.support.v7.widget.Toolbar;
 import android.text.method.ScrollingMovementMethod;
 import android.util.Log;
+import android.view.Menu;
+import android.view.MenuItem;
+import android.view.View;
+import android.widget.ImageView;
+import android.widget.TableLayout;
 import android.widget.TextView;
 import android.widget.Toast;
 
@@ -25,15 +36,18 @@ import java.io.ByteArrayOutputStream;
 import java.io.IOException;
 import java.io.InputStream;
 import java.io.OutputStream;
+import java.nio.charset.Charset;
+import java.nio.charset.CharsetEncoder;
 import java.util.Scanner;
 import java.util.UUID;
 
-public class MainActivity extends Activity {
+public class MainActivity extends AppCompatActivity {
 
     private static final String LOG_TAG = "eH-Hospital";
 
-    private TextView textInfo;
-    private TextView textOut;
+    static CharsetEncoder asciiEncoder = Charset.forName("ISO-8859-1").newEncoder();
+
+    //private TextView textOut;
 
     private NfcAdapter nfcAdapter;
 
@@ -60,6 +74,8 @@ public class MainActivity extends Activity {
 
     public static final String INFO = "info";
 
+    public static final String STREAM_STOP = "###END###";
+
     private final BluetoothAdapter mAdapter = BluetoothAdapter.getDefaultAdapter();
 
     private ConnectThread mConnectThread;
@@ -67,16 +83,105 @@ public class MainActivity extends Activity {
 
     private int mState;
 
+    private static TabLayout tabLayout;
+
+    private static ImageView clear;
+
+    public static PagerAdapter adapter;
+
+    public static ViewPager viewPager;
 
     @Override
     protected void onCreate(Bundle savedInstanceState) {
+
+
+        Intent i = getIntent();
+
+ //       textOut = (TextView) findViewById(R.id.textout);
+ //       textOut.setMovementMethod(new ScrollingMovementMethod());
+
+        //mSectionsPageAdapter = new SectionsPageAdapter(getSupportFragmentManager());
+    //    mViewPager = (ViewPager) findViewById(R.id.container);
+    //    setupViewPager(mViewPager);
+
+     //   TabLayout tabLayout = (TabLayout) findViewById(R.id.tabs);
+     //   tabLayout.setupWithViewPager(mViewPager);
+
         super.onCreate(savedInstanceState);
         setContentView(R.layout.activity_main);
+ //       Toolbar toolbar = (Toolbar) findViewById(R.id.toolbar);
+ //       setSupportActionBar(toolbar);
 
-        textInfo = (TextView) findViewById(R.id.info);
+        tabLayout = (TabLayout) findViewById(R.id.tab_layout);
+        tabLayout.addTab(tabLayout.newTab().setText("Log"));
+        tabLayout.addTab(tabLayout.newTab().setText("FHIR record"));
+        tabLayout.addTab(tabLayout.newTab().setText("Image"));
+        tabLayout.addTab(tabLayout.newTab().setText("Error"));
+        tabLayout.setTabGravity(TabLayout.GRAVITY_FILL);
 
-        textOut = (TextView) findViewById(R.id.textout);
-        textOut.setMovementMethod(new ScrollingMovementMethod());
+        viewPager = (ViewPager) findViewById(R.id.pager);
+        adapter = new PagerAdapter(getSupportFragmentManager(), tabLayout.getTabCount());
+        viewPager.setAdapter(adapter);
+        viewPager.addOnPageChangeListener(new TabLayout.TabLayoutOnPageChangeListener(tabLayout));
+        tabLayout.addOnTabSelectedListener(new TabLayout.OnTabSelectedListener() {
+            @Override
+            public void onTabSelected(TabLayout.Tab tab) {
+                viewPager.setCurrentItem(tab.getPosition());
+            }
+
+            @Override
+            public void onTabUnselected(TabLayout.Tab tab) {
+
+            }
+
+            @Override
+            public void onTabReselected(TabLayout.Tab tab) {
+
+            }
+        });
+
+        clear = (ImageView)findViewById(R.id.clear);
+
+        clear.setOnClickListener(new View.OnClickListener() {
+
+            @Override
+            public void onClick(View view)
+            {
+             /**
+
+                ImageView pic = (ImageView) view.findViewById(R.id.pic);
+                if (pic != null) {
+                    pic.setVisibility(ImageView.INVISIBLE);
+                }
+
+         //       TextView textInfo = (TextView) view.findViewById(R.id.info);
+          //      if (textInfo != null) {
+          //          textInfo.setVisibility(TextView.INVISIBLE);
+          //      }
+
+                TextView textout = (TextView) view.findViewById(R.id.textout);
+                if (textout != null) {
+                    textout.setVisibility(TextView.INVISIBLE);
+                }
+*/
+
+                Tab1Fragment frag1 = (Tab1Fragment)adapter.getItem(0);
+                frag1.hideText();
+
+                Tab2Fragment frag2 = (Tab2Fragment)adapter.getItem(1);
+                frag2.hideText();
+
+                Tab3Fragment frag3 = (Tab3Fragment)adapter.getItem(2);
+                frag3.hidePictureDummy();
+
+                /*
+                Toast.makeText(MainActivity.this,
+                        "Remove sachen",
+                        Toast.LENGTH_LONG).show(); */
+            }
+        });
+
+
 
         nfcAdapter = NfcAdapter.getDefaultAdapter(this);
         if (nfcAdapter == null) {
@@ -92,10 +197,18 @@ public class MainActivity extends Activity {
             //        "Waiting for Wallet ...",
             //        Toast.LENGTH_LONG).show();
 
-            textInfo.append("NFC enabled ... \nWaiting for Wallet ...");
+            Log.i(LOG_TAG, "NFC adapter started ...");
+
+ //           ((Tab1Fragment)((SectionsPageAdapter)mViewPager.getAdapter()).getItem(0)).appendToTextInfo("NFC enabled ... \nWaiting for Wallet ...");
+ //           Log.i(LOG_TAG, "TODO");
+
+            //textInfo.append("NFC enabled ... \nWaiting for Wallet ...");
 
             //nfcAdapter.setNdefPushMessageCallback(this, this);
             //nfcAdapter.setOnNdefPushCompleteCallback(this, this);
+
+         //   transferInfo("NFC enabled ...");
+         //   transferInfo("Waiting for Wallet ...");
         }
 
         // Cancel any thread attempting to make a connection
@@ -112,10 +225,47 @@ public class MainActivity extends Activity {
     }
 
     @Override
+    public boolean onCreateOptionsMenu(Menu menu) {
+        //getMenuInflater().inflate(R.menu.menu_main, menu);
+        return true;
+    }
+
+    @Override
+    public boolean onOptionsItemSelected(MenuItem item) {
+        int id = item.getItemId();
+  //      if (id == R.id.action_settings) {
+  //          return true;
+  //      }
+
+        return super.onOptionsItemSelected(item);
+    }
+
+
+//    private void setupViewPager(ViewPager viewPager) {
+//        mSectionsPageAdapter = new SectionsPageAdapter(getSupportFragmentManager());
+//        mSectionsPageAdapter.addFragment(new Tab1Fragment(), "Communication");
+//        mSectionsPageAdapter.addFragment(new Tab2Fragment(), "FHIR record");
+//        mSectionsPageAdapter.addFragment(new Tab3Fragment(), "Image");
+//        viewPager.setAdapter(mSectionsPageAdapter);
+//    }
+
+
+    @Override
     protected void onResume() {
         super.onResume();
         Intent intent = getIntent();
         String action = intent.getAction();
+        Log.i(LOG_TAG, "In RESUME: " + action);
+    }
+
+    @Override
+    protected void onResumeFragments() {
+        super.onResumeFragments();
+        Intent intent = getIntent();
+        String action = intent.getAction();
+
+        Log.i(LOG_TAG, "In RESUME Fragments: " + action);
+
         if (action.equals(NfcAdapter.ACTION_NDEF_DISCOVERED)) {
             Parcelable[] parcelables =
                     intent.getParcelableArrayExtra(
@@ -127,13 +277,7 @@ public class MainActivity extends Activity {
 
             eHealtWalletMacAdress = inMsg;
 
-            // textOut.setText("Wallet detected (" +inMsg + ")");
-            // Toast.makeText(this, "Wallet detected (" +inMsg + ")", Toast.LENGTH_SHORT).show();
-
-            textInfo.append("\nWallet detected (" +inMsg + ")");
-
-            Log.i(LOG_TAG, inMsg);
-
+            transferInfo("Wallet detected (" +inMsg + ")");
 
             // Get the BluetoothDevice object
             BluetoothDevice device = mAdapter.getRemoteDevice(eHealtWalletMacAdress);
@@ -142,6 +286,14 @@ public class MainActivity extends Activity {
         }
     }
 
+
+    private void transferInfo(String str) {
+        Message msg = mHandler.obtainMessage(MESSAGE_TRANSFER_INFO);
+        Bundle bundle = new Bundle();
+        bundle.putString(INFO, str);
+        msg.setData(bundle);
+        mHandler.sendMessage(msg);
+    }
 
     /**
      * Start the ConnectThread to initiate a connection to a remote device.
@@ -170,11 +322,13 @@ public class MainActivity extends Activity {
         mConnectThread = new ConnectThread(device, secure);
         mConnectThread.start();
 
-        Message msg = mHandler.obtainMessage(MESSAGE_TRANSFER_INFO);
-        Bundle bundle = new Bundle();
-        bundle.putString(INFO, "Connect via Bluetooth ...");
-        msg.setData(bundle);
-        mHandler.sendMessage(msg);
+ //       Message msg = mHandler.obtainMessage(MESSAGE_TRANSFER_INFO);
+ //       Bundle bundle = new Bundle();
+ //       bundle.putString(INFO, "Connect via Bluetooth ...");
+//        msg.setData(bundle);
+ //       mHandler.sendMessage(msg);
+
+        transferInfo("Connect via Bluetooth ...");
 
         //connected
 
@@ -208,11 +362,13 @@ public class MainActivity extends Activity {
         // Start the thread to manage the connection and perform transmissions
         mConnectedThread = new ConnectedThread(socket, socketType);
 
-        Message msg = mHandler.obtainMessage(MESSAGE_TRANSFER_INFO);
-        Bundle bundle = new Bundle();
-        bundle.putString(INFO, "Start transfer via Bluetooth ...");
-        msg.setData(bundle);
-        mHandler.sendMessage(msg);
+     //   Message msg = mHandler.obtainMessage(MESSAGE_TRANSFER_INFO);
+     //   Bundle bundle = new Bundle();
+     //   bundle.putString(INFO, "Start transfer via Bluetooth ...");
+     //   msg.setData(bundle);
+     //   mHandler.sendMessage(msg);
+
+        transferInfo("Start transfer via Bluetooth ...");
 
         mConnectedThread.start();
     }
@@ -230,70 +386,74 @@ public class MainActivity extends Activity {
 
         Activity a = getParent();
 
+        /*
+        final ViewPager viewPager = (ViewPager) findViewById(R.id.pager);
+        PagerAdapter adapter = (PagerAdapter)viewPager.getAdapter();
+        Tab1Fragment frag1 = (Tab1Fragment)adapter.getItem(0);
+        Tab2Fragment frag2 = (Tab2Fragment) adapter.getItem(1);
+        Tab3Fragment frag3 = (Tab3Fragment) adapter.getItem(2);
+*/
+
         @Override
         public void handleMessage(Message msg) {
 
             Log.d(LOG_TAG, "handleMessage:" + msg.what);
 
+            //final ViewPager viewPager = (ViewPager) findViewById(R.id.pager);
+            //PagerAdapter adapter = (PagerAdapter)viewPager.getAdapter();
+
+  //          final ViewPager viewPager = (ViewPager) findViewById(R.id.pager);
+  //          PagerAdapter adapter = (PagerAdapter)viewPager.getAdapter();
+            Tab1Fragment frag1 = (Tab1Fragment) adapter.getItem(0);
+            Tab2Fragment frag2 = (Tab2Fragment) adapter.getItem(1);
+            Tab3Fragment frag3 = (Tab3Fragment) adapter.getItem(2);
+
+
             switch (msg.what) {
-//                case MESSAGE_STATE_CHANGE:
-//                    switch (msg.arg1) {
-//                        case BluetoothChatService.STATE_CONNECTED:
-//                            setStatus(getString(R.string.title_connected_to, mConnectedDeviceName));
-//                            mConversationArrayAdapter.clear();
-//                            break;
-//                        case BluetoothChatService.STATE_CONNECTING:
-//                            setStatus(R.string.title_connecting);
-//                            break;
-//                        case BluetoothChatService.STATE_LISTEN:
-//                        case BluetoothChatService.STATE_NONE:
-//                            setStatus(R.string.title_not_connected);
-//                            break;
-//                    }
-//                    break;
-//                case Constants.MESSAGE_WRITE:
-//                    byte[] writeBuf = (byte[]) msg.obj;
-//                    // construct a string from the buffer
-//                    String writeMessage = new String(writeBuf);
-//                    mConversationArrayAdapter.add("Me:  " + writeMessage);
-//                    break;
-//                case Constants.MESSAGE_READ:
-//                    byte[] readBuf = (byte[]) msg.obj;
-//                    // construct a string from the valid bytes in the buffer
-//                    String readMessage = new String(readBuf, 0, msg.arg1);
-//                    mConversationArrayAdapter.add(mConnectedDeviceName + ":  " + readMessage);
-//                    break;
+
                 case MESSAGE_TRANSFER_INFO:
-                    textInfo.append("\n" + msg.getData().getString(INFO));
 
-//                    if (null != activity) {
-//                        Toast.makeText(activity, "Connected to "
-//                                + mConnectedDeviceName, Toast.LENGTH_SHORT).show();
-
-//                    }
-//                    break;
-//                case MESSAGE_TOAST:
-//                    if (null != activity) {
-//                        Toast.makeText(activity, msg.getData().getString(Constants.TOAST),
-//                                Toast.LENGTH_SHORT).show();
-//                    }
+                    //Tab1Fragment frag1 = (Tab1Fragment)adapter.getItem(0);
+                    frag1.appendToTextInfo(msg.getData().getString(INFO));
                     break;
 
-                    case MESSAGE_TOAST:
+                case MESSAGE_TOAST:
 
                         Toast.makeText(a, msg.getData().getString("TOAST"),
                                 Toast.LENGTH_SHORT).show();
                     break;
 
-                    case MESSAGE_READ:
+                case MESSAGE_READ:
                         byte[] readBuf = (byte[]) msg.obj;
-                    // construct a string from the valid bytes in the buffer
+                        // construct a string from the valid bytes in the buffer
                         String readMessage = new String(readBuf, 0, msg.arg1);
-                    //mConversationArrayAdapter.add(mConnectedDeviceName + ":  " + readMessage);
+                        //mConversationArrayAdapter.add(mConnectedDeviceName + ":  " + readMessage);
 
                         Log.d(LOG_TAG, "message:" + readMessage);
 
-                        textOut.append(readMessage);
+                        // textOut.append(readMessage);
+                        // Log.d(LOG_TAG, "\n" +readMessage);
+
+                        if (readMessage.startsWith(STREAM_STOP)) {
+                            Log.d(LOG_TAG, STREAM_STOP + ":\n" + readMessage);
+                            //Tab1Fragment frag1 = (Tab1Fragment)adapter.getItem(0);
+                            //frag1.onCreateView(getLayoutInflater(), viewPager, null);
+                            frag1.appendToTextInfo("Transfer finished ...");
+                            //Tab3Fragment frag3 = (Tab3Fragment) adapter.getItem(2);
+                            frag3.onCreateView(getLayoutInflater(), viewPager, null);
+                            //frag3.showPicture(readBuf);
+                            frag3.showPictureDummy();
+                        } else if (isPuretext(readMessage)) {
+                            //Log.d(LOG_TAG, "message:" + readMessage);
+                            //Tab2Fragment frag2 = (Tab2Fragment) adapter.getItem(1);
+                            frag2.appendToTextInfo(readMessage);
+                        } else {
+                            //Tab3Fragment frag3 = (Tab3Fragment) adapter.getItem(2);
+                            Log.i(LOG_TAG, "PICTURE Data!!!");
+                            //frag3.appendPictureData(readBuf);
+                        }
+
+
 
                         //Toast.makeText(a, readMessage, Toast.LENGTH_SHORT).show();
                         //setStatus(R.string.title_not_connected);
@@ -302,6 +462,10 @@ public class MainActivity extends Activity {
             }
         }
     };
+
+    private static boolean isPuretext(String v) {
+        return asciiEncoder.canEncode(v);
+    }
 
     /**
      * This thread runs while attempting to make an outgoing connection
@@ -407,8 +571,8 @@ public class MainActivity extends Activity {
 
         public void run() {
             Log.i(LOG_TAG, "BEGIN mConnectedThread");
-            byte[] buffer = new byte[8024];
-            int bytes = 0;
+ //           byte[] buffer = new byte[8024];
+ //           int bytes = 0;
 
             // Keep listening to the InputStream while connected
             Log.i(LOG_TAG, "State:" + mState);
@@ -440,11 +604,29 @@ public class MainActivity extends Activity {
                    //textOut.setText(readMessage);
 
                    // Read from the InputStream
-                   bytes = mmInStream.read(buffer);
+                   //bytes = mmInStream.read(buffer);
 
-                   // Send the obtained bytes to the UI Activity
-                   mHandler.obtainMessage(MESSAGE_READ, bytes, -1, buffer)
-                           .sendToTarget();
+                   int nRead;
+                   byte[] data = new byte[4000];
+
+                   //mmInStream.read();
+
+
+                   //while ((nRead = mmInStream.read(data, 0, data.length)) != -1) {
+                   while ((nRead = mmInStream.read(data)) != -1) {
+                       //buffer.write(data, 0, nRead);
+                       Log.i(LOG_TAG, "**** READ STREAM");
+                       // Send the obtained bytes to the UI Activity
+                       mHandler.obtainMessage(MESSAGE_READ, data.length, -1, data)
+                               .sendToTarget();
+                   }
+
+
+
+
+                   //Imageread
+
+
 
 //                //    Scanner s = new Scanner(mmInStream).useDelimiter("\\A");
 //                //    String fhirRecord = s.hasNext() ? s.next() : "";
@@ -457,12 +639,15 @@ public class MainActivity extends Activity {
 //                            Toast.LENGTH_LONG).show();
 
 
-                   Message msg = mHandler.obtainMessage(MESSAGE_TRANSFER_INFO);
-                   Bundle bundle = new Bundle();
-                   bundle.putString(INFO, "FHIR health record transfer, part " + i);
+ //                  Message msg = mHandler.obtainMessage(MESSAGE_TRANSFER_INFO);
+ //                  Bundle bundle = new Bundle();
+ //                  bundle.putString(INFO, "FHIR health record transfer, part " + i);
+
+ //                  msg.setData(bundle);
+ //                  mHandler.sendMessage(msg);
+
+                   transferInfo("FHIR health record transfer, part " + i);
                    i++;
-                   msg.setData(bundle);
-                   mHandler.sendMessage(msg);
 
                 } catch (Exception e) {
                     Log.e(LOG_TAG, "disconnected", e);
