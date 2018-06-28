@@ -41,9 +41,10 @@ public class Tab1Fragment extends Fragment {
 
     public void appendToTextInfo(String i) {
         text = text + "\n" + i;
-        textInfo.setText(text);
-        textInfo.setVisibility(TextView.VISIBLE);
-        //textInfo.append(i + "\n");
+        if (textInfo != null) {
+            textInfo.setText(text);
+            textInfo.setVisibility(TextView.VISIBLE);
+        }
     }
 
     public void hideText() {

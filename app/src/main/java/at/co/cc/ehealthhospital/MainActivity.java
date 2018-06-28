@@ -169,8 +169,8 @@ public class MainActivity extends AppCompatActivity {
             //nfcAdapter.setNdefPushMessageCallback(this, this);
             //nfcAdapter.setOnNdefPushCompleteCallback(this, this);
 
-         //   transferInfo("NFC enabled ...");
-         //   transferInfo("Waiting for Wallet ...");
+            transferInfo("NFC enabled ...");
+            transferInfo("Waiting for Wallet ...");
         }
 
         // Cancel any thread attempting to make a connection

@@ -42,6 +42,12 @@ public class Tab3Fragment extends Fragment {
         if (!picSet) {
             pic.setLayoutParams(new RelativeLayout.LayoutParams(0,0));
         }
+        else {
+            pic.setLayoutParams(
+                    new RelativeLayout.LayoutParams(
+                            ViewGroup.LayoutParams.WRAP_CONTENT,
+                            ViewGroup.LayoutParams.WRAP_CONTENT));
+        }
 
         Log.d(TAG, "pic initalized: " + pic);
         Log.d(TAG, "ID: " + this);
@@ -51,12 +57,14 @@ public class Tab3Fragment extends Fragment {
 
     public void showPictureDummy() {
         picSet = true;
-        pic.setLayoutParams(
-                new RelativeLayout.LayoutParams(
-                        ViewGroup.LayoutParams.WRAP_CONTENT,
-                        ViewGroup.LayoutParams.WRAP_CONTENT));
+        if (pic != null) {
+            pic.setLayoutParams(
+                    new RelativeLayout.LayoutParams(
+                            ViewGroup.LayoutParams.WRAP_CONTENT,
+                            ViewGroup.LayoutParams.WRAP_CONTENT));
 
-        pic.setVisibility(ImageView.VISIBLE);
+            pic.setVisibility(ImageView.VISIBLE);
+        }
     }
 
     public void hidePictureDummy() {
